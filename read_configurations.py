@@ -229,8 +229,8 @@ if __name__ == '__main__':
 
     datasets = [x.stem for x in dataset_path.iterdir()]
 
-    # reader = ODGridAllReader(pkl_path, klass, dataset_list=datasets)
-    reader = ClusteringGridAllReader(pkl_path, klass)
+    reader = ODGridAllReader(pkl_path, klass, dataset_list=datasets)
+    # reader = ClusteringGridAllReader(pkl_path, klass)
     reader.analyze()
     print(len(reader.test_datasets))
 
