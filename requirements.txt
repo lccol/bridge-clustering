@@ -1,0 +1,7 @@
+numpy==1.18.1
+pandas==1.0.0
+matplotlib==3.3.3
+scikit-learn==0.22.1
+pyod==0.8.2
+hdbscan==0.8.26
+python_algorithms==0.2.2

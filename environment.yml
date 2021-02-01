@@ -1,0 +1,14 @@
+name: bridgeclustering
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.6.10
+  - numpy=1.18.1
+  - matplotlib=3.3.3
+  - pandas=1.0.0
+  - scitkit-learn=0.22.1
+  - pyod=0.8.2
+  - hdbscan=0.8.26
+  - pip:
+    - python_algorithms==0.2.2
