@@ -97,7 +97,7 @@ def generate_reports(df: pd.DataFrame, save_basepath: Union[str, Path], save_df:
         fp.write(json.dumps(differences, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
-    savepath = Path('figures', 'reports_undir_DEF')
+    savepath = Path('results', 'reports_autoclust')
     csv_path = savepath / 'ari_scores.csv'
     df = pd.read_csv(csv_path).set_index('dataset').sort_index()
     

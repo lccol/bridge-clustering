@@ -11,6 +11,7 @@ from hdbscan import HDBSCAN
 from border_peel.border_peeling import BorderPeelingWrapper, BorderPeel
 from bridge_clustering.functions import determine_bridges, compute_neighbors
 from bridge_clustering import BridgeClustering
+from autoclust import AUTOCLUST
 
 from pyod.models.lof import LOF
 from utils import read_arff, generate_dbscan_config_tree
@@ -65,7 +66,7 @@ if __name__ == '__main__':
     dbscan_config_path = Path('dbscan_config.json')
     export_images = True
     export_images_path = Path('results', 'clustering_comparisons_figures')
-    report_basepath = Path('results', 'reports')
+    report_basepath = Path('results', 'reports_autoclust')
     k = 10
 
     if not export_images_path.is_dir():
@@ -87,6 +88,7 @@ if __name__ == '__main__':
         (OPTICS, {'min_samples': 50, 'cluster_method': 'xi'}),
         (BridgeClustering, {'outlier_class': LOF, 'outlier_params': {'contamination': .2, 'n_neighbors': 15}, 'k': k}),
         (BorderPeelingWrapper, {}),
+        (AUTOCLUST, {})
     ]
 
     df_dict = defaultdict(list)
