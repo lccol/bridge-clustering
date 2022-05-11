@@ -12,6 +12,7 @@ from border_peel.border_peeling import BorderPeelingWrapper, BorderPeel
 from bridge_clustering.functions import determine_bridges, compute_neighbors
 from bridge_clustering import BridgeClustering
 from autoclust import AUTOCLUST
+from denmune_wrapper import DenMuneWrapper
 
 from pyod.models.lof import LOF
 from utils import read_arff, generate_dbscan_config_tree
@@ -73,7 +74,7 @@ if __name__ == '__main__':
         export_images_path.mkdir(parents=True)
 
     if not report_basepath.is_dir():
-        report_basepath.mkdir()
+        report_basepath.mkdir(parents=True)
 
     plot_configuration = {
         'bbox_inches': 'tight',
@@ -88,7 +89,8 @@ if __name__ == '__main__':
         (OPTICS, {'min_samples': 50, 'cluster_method': 'xi'}),
         (BridgeClustering, {'outlier_class': LOF, 'outlier_params': {'contamination': .2, 'n_neighbors': 15}, 'k': k}),
         (BorderPeelingWrapper, {}),
-        (AUTOCLUST, {})
+        (AUTOCLUST, {}),
+        (DenMuneWrapper, {'k': 20, 'rgn_tsne': False, 'show_plots': False, 'show_noise': True, 'show_analyzer': False})
     ]
 
     df_dict = defaultdict(list)
@@ -105,7 +107,7 @@ if __name__ == '__main__':
         _, indices = compute_neighbors(X, k)
         is_bridge = determine_bridges(labels, indices) == 0
         for kls, args in classifiers:
-
+            print(f'Clustering algorithm: {str(kls)}')
             clf = clusterize(kls, args, X, dbscan_configuration, dataset)
             predicted_labels = clf.labels_
             ari = adjusted_rand_score(labels, predicted_labels)
