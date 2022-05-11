@@ -67,7 +67,7 @@ if __name__ == '__main__':
     dbscan_config_path = Path('dbscan_config.json')
     export_images = True
     export_images_path = Path('results', 'clustering_comparisons_figures')
-    report_basepath = Path('results', 'reports_autoclust')
+    report_basepath = Path('results', 'reports')
     k = 10
 
     if not export_images_path.is_dir():
