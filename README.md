@@ -46,3 +46,4 @@ The datasets are stored in `datasets` folder in `.arff` format.
 * `plot_bridges_figures.py`: generates plots containing datasets, clusters, bridges and outliers;
 * `grid_search.py`: performs the grid search and save results using pickle;
 * `run_dadc.py`: run the DADC algorithm only;
+* `run_denmune.py`: run the DenMune algorithm only;
