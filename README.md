@@ -27,7 +27,7 @@ https://github.com/JianguoChen2015/DADC
 Minor changes were made: plotting functionalities and export information as csv files were disabled.
 
 ### DenMune clustering
-The DenMune clustering algorithm was install via `pip install denmune` command.
+The DenMune clustering algorithm was installed via `pip install denmune` command.
 
 The authors' implementation is available at the following GitHub repository: https://github.com/egy1st/denmune-clustering-algorithm.
 
