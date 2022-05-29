@@ -12,9 +12,11 @@ def read_arff(fullpath: Union[str, Path]) -> Tuple[np.ndarray, np.ndarray]:
     data, _ = loadarff(fullpath)
     df = pd.DataFrame(data)
     klass = 'class' if 'class' in df.columns else 'CLASS'
+    assert klass in df.columns
     df[klass] = pd.factorize(df[klass])[0]
     
-    cols = ['x', 'y'] if {'x', 'y'}.issubset((df.columns)) else ['a0', 'a1']
+#     cols = ['x', 'y'] if {'x', 'y'}.issubset((df.columns)) else ['a0', 'a1']
+    cols = [x for x in df.columns if x != klass]
     X = df[cols].values
     y = df[klass].values
     return X, y
