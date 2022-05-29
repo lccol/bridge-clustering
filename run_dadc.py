@@ -10,8 +10,8 @@ from collections import defaultdict
 from sklearn.metrics import adjusted_rand_score
 
 if __name__ == '__main__':
-    dataset = Path('datasets')
-    savepath = Path('results', 'reports')
+    dataset = Path('datasets2')
+    savepath = Path('results', 'reports_datasets2_dadc')
 
     dadc_params = {
         'k': 0.05,
@@ -23,8 +23,8 @@ if __name__ == '__main__':
 
     df_dict = defaultdict(list)
     for idx, fullpath in enumerate(dataset.iterdir()):
-        if fullpath.stem == 'banana':
-            print('skipped banana')
+        if fullpath.stem in {'banana', 'ds2c2sc13'}:
+            print(f'skipped dataset {fullpath.stem}')
             continue
         print(f'{idx + 1}) clustering dataset {fullpath.stem}')
         X, labels = read_arff(fullpath)
