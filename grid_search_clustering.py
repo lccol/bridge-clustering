@@ -48,7 +48,7 @@ def clusterize(local_distances: np.ndarray, local_indices: np.ndarray, is_bridge
 if __name__ == '__main__':
     dataset_folder = Path('datasets2')
     result_path = Path('grid_search_results2')
-    savepath = result_path / f'optics2.pkl'
+    savepath = result_path / f'hdbscan2.pkl'
     dbscan_config_path = Path('dbscan_config.json')
     eps_dict = generate_dbscan_config_tree(dbscan_config_path)
 
@@ -58,16 +58,16 @@ if __name__ == '__main__':
     dataset_cache = DatasetBridgeCache(dataset_folder)
 
     parameter_dict = {
-        OPTICS: {
-            'min_samples': [0.01, 0.03, 0.05, 0.07, 0.1, 5, 50, 100],
-            'cluster_method': ['xi', 'dbscan'],
-            'n_jobs': [2]
-        }
-#         HDBSCAN: {
-#            'min_cluster_size': [5, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150],
-#            'min_samples': [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-#            'cluster_selection_method': ['eom', 'leaf']
+#         OPTICS: {
+#             'min_samples': [0.01, 0.03, 0.05, 0.07, 0.1, 5, 50, 100],
+#             'cluster_method': ['xi', 'dbscan'],
+#             'n_jobs': [2]
 #         }
+        HDBSCAN: {
+           'min_cluster_size': [5, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150],
+           'min_samples': [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+           'cluster_selection_method': ['eom', 'leaf']
+        }
 #         DBSCAN: {
 #            'min_samples': [5, 7, 10, 12, 15, 17]
 #         },
@@ -115,6 +115,8 @@ if __name__ == '__main__':
                 predicted_labels = od.labels_
 
                 score_dict = {}
+                ari = adjusted_rand_score(cluster_labels, predicted_labels)
+                score_dict['ari'] = ari
 
                 # clustering
                 result_dict[dt_no_ext][model.__name__].append((p, score_dict))
