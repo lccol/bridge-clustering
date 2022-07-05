@@ -184,7 +184,16 @@ def determine_bridges(labels, local_indices):
 def remove_self(distances, indices):
     indexes = np.arange(indices.shape[0], dtype=np.int)[..., np.newaxis]
     mask = indices == indexes
-    assert ((mask.sum(axis=-1)) == 1).all()
+    check_array = (mask.sum(axis=-1)) == 1
+    check = check_array.all()
+    if not check:
+        print(f'WARNING: found at least one point for which the point itself is not included in its neighborhood.')
+        print('This is likely due to overlapping points.')
+        # for points for which distances == 0 for all the neighbors and for which the point itself is not included,
+        # remove the first element
+        null_elements = ~check_array
+        null_indexes = indexes[null_elements]
+        mask[null_indexes, 0] = True
     inverse_mask = ~mask
 
     test_dist = remove_first_column(distances)
