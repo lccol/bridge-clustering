@@ -9,10 +9,17 @@ from sklearn import model_selection
 from collections import defaultdict
 
 def read_arff(fullpath: Union[str, Path]) -> Tuple[np.ndarray, np.ndarray]:
-    data, _ = loadarff(fullpath)
+    data, meta = loadarff(fullpath)
     df = pd.DataFrame(data)
-    klass = 'class' if 'class' in df.columns else 'CLASS'
-    assert klass in df.columns
+
+    klass = None
+    if 'class' in df.columns:
+        klass = 'class'
+    elif 'CLASS' in df.columns:
+        klass = 'CLASS'
+    elif 'Class' in df.columns:
+        klass = 'Class'
+    assert klass in df.columns and not klass is None
     df[klass] = pd.factorize(df[klass])[0]
     
 #     cols = ['x', 'y'] if {'x', 'y'}.issubset((df.columns)) else ['a0', 'a1']
