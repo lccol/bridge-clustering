@@ -5,6 +5,8 @@ from numpy.core.fromnumeric import mean
 from scipy.spatial import Delaunay
 from scipy.spatial.distance import euclidean
 
+from typing import Optional
+
 class Edge:
     def __init__(self, src: int, dst: int, weight: float):
         self.src = src
@@ -28,7 +30,11 @@ class Edge:
         
 
 class AUTOCLUST:
-    def __init__(self, cache_distances: bool=True, eval_empty_nodes: bool=False, shuffle_labels: bool=True, seed=None):
+    def __init__(self,
+                 cache_distances: bool=True,
+                 eval_empty_nodes: bool=False,
+                 shuffle_labels: bool=True,
+                 seed=None):
         self.long_edges_ = []
         self.short_edges_ = []
         self.other_edges = []
