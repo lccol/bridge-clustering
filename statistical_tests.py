@@ -17,6 +17,7 @@ def friedman_test(df: pd.DataFrame):
 def nemenyi_test(df: pd.DataFrame):
     n = df.shape[0]
     k = df.shape[1]
+    print(f'N: {n} - k: {k}')
     cols = [x for x in df.columns if x != 'dataset']
 
     q_alpha = [1.960, 2.343, 2.569, 2.728, 2.850, 2.949, 3.031, 3.102, 3.164]
@@ -34,7 +35,7 @@ def generate_reports(df: pd.DataFrame, save_basepath: Union[str, Path], save_df:
     friedman_out = friedman_test(df)
     nemenyi_out = nemenyi_test(df)
 
-    mask = df.index != 'banana.arff'
+    mask = ~df.isna().any(axis=1) # df.index != 'banana.arff'
     subdf = df[mask]
 
     if not save_basepath.is_dir():
@@ -43,9 +44,9 @@ def generate_reports(df: pd.DataFrame, save_basepath: Union[str, Path], save_df:
     ranked_df, differences, cd, q_alpha = nemenyi_out
 
     if save_df:
-        df.to_csv(save_basepath / 'ari_scores.csv')
+        df.to_csv(save_basepath / 'ari_scores_all.csv')
     if save_rankings_df:
-        ranked_df.to_csv(save_basepath / 'rankings.csv')
+        ranked_df.to_csv(save_basepath / 'rankings_all.csv')
 
     with open(save_basepath / filename, 'w') as fp:
         fp.write('ARI scores:')
@@ -97,8 +98,25 @@ def generate_reports(df: pd.DataFrame, save_basepath: Union[str, Path], save_df:
         fp.write(json.dumps(differences, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
-    savepath = Path('results', 'reports_autoclust')
+    savepath = Path('results', 'reports')
     csv_path = savepath / 'ari_scores.csv'
-    df = pd.read_csv(csv_path).set_index('dataset').sort_index()
+    df = pd.read_csv(csv_path) \
+            .set_index('dataset') \
+            .sort_index()
+#     dadc_df = pd.read_csv(Path('results', 'reports_dadc') / 'ari_DADC.csv')
+    
+#     dadc_df['dataset'] = dadc_df['dataset'] + '.arff'
+    
+#     dadc_df = dadc_df \
+#                 .set_index('dataset') \
+#                 .sort_index() \
+#                 .rename({'ari': 'DADC'}, axis=1)
+#     print('dadc df: ')
+#     print(dadc_df)
+#     all_df = df.merge(dadc_df, left_index=True, right_index=True, how='left')
+    
+    df = df.drop('AUTOCLUST', axis=1)
+    
+    print(df)
     
     generate_reports(df, savepath, filename='report.txt')
