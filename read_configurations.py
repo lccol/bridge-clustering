@@ -116,7 +116,14 @@ def count_configurations(reader: Reader, unique_values: dict, ignore_fields: Uni
         accumulator = np.stack(accumulator, axis=-1)
         return accumulator, dimension_dict
 
-def plot_statistics(dimension_dict: dict, matrix: np.ndarray, selected_features: list, fixed_params: Union[None, Dict]=None, figsize=(11, 9), column_mapper: Union[Dict, None]=None, fontsize: int=8):
+def plot_statistics(dimension_dict: dict,
+                    matrix: np.ndarray,
+                    selected_features: list,
+                    fixed_params: Union[None, Dict]=None,
+                    figsize=(11, 9),
+                    column_mapper: Union[Dict, None]=None,
+                    fontsize: int=8,
+                    label_fontsize: int=14):
     fixed_params_keys = set(fixed_params.keys()) if not fixed_params is None else set()
     reduction = tuple(idx for idx in dimension_dict if not dimension_dict[idx]['field'] in selected_features and not dimension_dict[idx]['field'] in fixed_params_keys)
     reduction_func = np.sum
@@ -163,16 +170,17 @@ def plot_statistics(dimension_dict: dict, matrix: np.ndarray, selected_features:
         # barplot
         fig, ax = plt.subplots(figsize=(figsize))
         df.plot(ax=ax, grid=True, marker='o')
-        plt.xlabel(axis_labels[0])
-        plt.ylabel('value')
+        plt.xlabel(axis_labels[0], fontsize=label_fontsize)
+        plt.ylabel('value', fontsize=label_fontsize)
         return fig, reduced_matrix
     else:
         assert len(indexes) == 2
         df = pd.DataFrame(reduced_matrix, columns=indexes[1], index=indexes[0])
         fig, ax = plt.subplots(figsize=(figsize))
         sns.heatmap(df, annot=True, annot_kws={'fontsize': fontsize})
-        plt.xlabel(axis_labels[1])
-        plt.ylabel(axis_labels[0])
+        plt.xlabel(axis_labels[1], fontsize=label_fontsize)
+        plt.ylabel(axis_labels[0], fontsize=label_fontsize)
+        plt.yticks(rotation=0)
         return fig, reduced_matrix
 
 def get_config_from_index(index: Tuple, dimension_dict: Dict) -> Dict:
@@ -197,23 +205,25 @@ def find_best_configs(matrix: np.ndarray, reduction_func, threshold: float, dime
     return list(zip(configs, selected_values))
 
 if __name__ == '__main__':
-    readpath = Path('grid_search_results2')
-    dataset_path = Path('datasets2')
-    pkl_path = readpath / 'lof2.pkl'
+    readpath = Path('grid_search')
+    pkl_path = readpath / 'lof.pkl'
     ignore_fields = {'n_jobs'}
     klass = 'LOF'
-    savepath = Path('figures2', f'{klass}_stats')
-    fontsize = 16
-    fontsize_heatmap = 15
-
-    plt.rcParams.update({'axes.labelsize': fontsize, 'xtick.labelsize': fontsize - 2, 'ytick.labelsize': fontsize - 2})
+    savepath = Path('figures', f'{klass}_stats')
+    fontsize = 22
+    ticks_size = 18
+    fontsize_heatmap = 17
+    figsize = (8.5, 6.5)
+    export_images = True
+    
+    plt.rcParams.update({'axes.labelsize': fontsize, 'xtick.labelsize': ticks_size, 'ytick.labelsize': ticks_size})
 
     if not savepath.is_dir():
         savepath.mkdir(parents=True)
 
     plot_configuration = {
         'bbox_inches': 'tight',
-        'pad_inches': .2
+        'pad_inches': 0
     }
 
     if klass in {'KNN', 'LOF'}:
@@ -229,10 +239,9 @@ if __name__ == '__main__':
             'contamination': 'Contamination',
         }
 
-    datasets = [x.stem for x in dataset_path.iterdir() if x.is_file()]
 
     if klass in {'LOF', 'KNN', 'HBOS'}:
-        reader = ODGridAllReader(pkl_path, klass, dataset_list=datasets)
+        reader = ODGridAllReader(pkl_path, klass)
     else:
         reader = ClusteringGridAllReader(pkl_path, klass)
     reader.analyze()
@@ -257,35 +266,63 @@ if __name__ == '__main__':
     if klass == 'HBOS':
         # HBOS
         selected_features = ['n_bins', 'contamination']
-        fig, m = plot_statistics(dimension_dict, data_matrix, selected_features, fixed_params={'k': 4}, column_mapper=columns_mapper, fontsize=fontsize_heatmap)
+        fig, m = plot_statistics(dimension_dict, 
+                                 data_matrix, 
+                                 selected_features, 
+                                 fixed_params={'k': best_config['k']}, 
+                                 column_mapper=columns_mapper, 
+                                 fontsize=fontsize_heatmap,
+                                 label_fontsize=fontsize)
         # plt.title('Mean Adjusted Rand Score')
         plt.title('')
-        fig.savefig(savepath / f'{klass}_bins_contamination.png', **plot_configuration)
+        if export_images:
+            fig.savefig(savepath / f'{klass}_bins_contamination.png', **plot_configuration)
 
         selected_features = ['k']
-        fig, m = plot_statistics(dimension_dict, data_matrix, selected_features, fixed_params={'contamination': .2, 'n_bins': 10}, column_mapper=columns_mapper)
+        fig, m = plot_statistics(dimension_dict, 
+                                 data_matrix, 
+                                 selected_features, 
+                                 fixed_params={'contamination': best_config['contamination'], 'n_bins': best_config['n_bins']},
+                                 column_mapper=columns_mapper,
+                                 fontsize=fontsize_heatmap, 
+                                 label_fontsize=fontsize)
         # plt.title(klass)
         plt.ylabel('Mean Adjusted Rand Score')
         plt.gca().legend().remove()
         plt.ylim([.2, 1.])
-        fig.savefig(savepath / f'{klass}_k.png', **plot_configuration)
+        if export_images:
+            fig.savefig(savepath / f'{klass}_k.png', **plot_configuration)
     elif klass in {'LOF', 'KNN'}:
         # LOF
         selected_features = ['n_neighbors', 'contamination']
-        fig, m = plot_statistics(dimension_dict, data_matrix, selected_features, fixed_params={'k': best_config['k']}, column_mapper=columns_mapper, fontsize=fontsize_heatmap)
+        fig, m = plot_statistics(dimension_dict,
+                                 data_matrix,
+                                 selected_features,
+                                 fixed_params={'k': best_config['k']},
+                                 column_mapper=columns_mapper,
+                                 fontsize=fontsize_heatmap,
+                                 label_fontsize=fontsize)
         # plt.title('Mean Adjusted Rand Score')
         plt.title('')
-        fig.savefig(savepath / f'{klass}_neighbors_contamination.png', **plot_configuration)
+        if export_images:
+            fig.savefig(savepath / f'{klass}_neighbors_contamination.png', **plot_configuration)
 
     if klass in {'KNN', 'LOF'}:
     # LOF, KNN
         selected_features = ['k']
-        fig, m = plot_statistics(dimension_dict, data_matrix, selected_features, fixed_params={'contamination': best_config['contamination'], 'n_neighbors': best_config['n_neighbors']}, column_mapper=columns_mapper, fontsize=fontsize_heatmap)
+        fig, m = plot_statistics(dimension_dict,
+                                 data_matrix,
+                                 selected_features,
+                                 fixed_params={'contamination': best_config['contamination'], 'n_neighbors': best_config['n_neighbors']},
+                                 column_mapper=columns_mapper,
+                                 fontsize=fontsize_heatmap,
+                                 label_fontsize=fontsize)
         # plt.title('Mean Adjusted Rand Score')
         plt.title('')
         plt.ylim([.2, 1.])
         plt.gca().legend().remove()
-        fig.savefig(savepath / f'{klass}_k.png', **plot_configuration)
+        if export_images:
+            fig.savefig(savepath / f'{klass}_k.png', **plot_configuration)
 
     plt.close('all')
     # plt.show()
