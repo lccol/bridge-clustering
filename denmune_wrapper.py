@@ -18,10 +18,11 @@ class DenMuneWrapper:
         
     def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Optional[Union[np.ndarray, pd.Series]]=None):
         assert isinstance(X, (np.ndarray, pd.DataFrame))
-        if isinstance(X, np.ndarray):
-            X = pd.DataFrame(X, columns=pd.Int64Index(range(X.shape[1])))
+#         if isinstance(X, np.ndarray):
+#             X = pd.DataFrame(X, columns=pd.Int64Index(range(X.shape[1])))
         
         self.model = DenMune(train_data=X,
+                             train_truth=y,
                              k_nearest=self.k,
                              rgn_tsne=self.rgn_tsne)
         
