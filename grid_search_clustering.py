@@ -46,28 +46,38 @@ def clusterize(local_distances: np.ndarray, local_indices: np.ndarray, is_bridge
     return pred_cluster_labels
 
 if __name__ == '__main__':
-    dataset_folder = Path('datasets2')
-    result_path = Path('grid_search_results2')
-    savepath = result_path / f'hdbscan2.pkl'
+    syn_folder = Path('datasets', 'synthetic')
+    rw_folder = Path('datasets', 'real-world')
+    rw_datasets = {x.stem for x in rw_folder.iterdir() if x.is_file()}
+    
+    result_path = Path('grid_search')
+    savepath = result_path / f'optics.pkl'
     dbscan_config_path = Path('dbscan_config.json')
     eps_dict = generate_dbscan_config_tree(dbscan_config_path)
+    
+    data_list = []
+    for fullpath in syn_folder.iterdir():
+        data_list.append(fullpath)
+    for fullpath in rw_folder.iterdir():
+        data_list.append(fullpath)
 
     if not result_path.is_dir():
         result_path.mkdir()
 
-    dataset_cache = DatasetBridgeCache(dataset_folder)
+    syn_cache = DatasetBridgeCache(syn_folder)
+    rw_cache = DatasetBridgeCache(rw_folder)
 
     parameter_dict = {
-#         OPTICS: {
-#             'min_samples': [0.01, 0.03, 0.05, 0.07, 0.1, 5, 50, 100],
-#             'cluster_method': ['xi', 'dbscan'],
-#             'n_jobs': [2]
-#         }
-        HDBSCAN: {
-           'min_cluster_size': [5, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150],
-           'min_samples': [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-           'cluster_selection_method': ['eom', 'leaf']
+        OPTICS: {
+            'min_samples': [0.01, 0.03, 0.05, 0.07, 0.1, 5, 50, 100],
+            'cluster_method': ['xi', 'dbscan'],
+            'n_jobs': [2]
         }
+#         HDBSCAN: {
+#            'min_cluster_size': [5, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150],
+#            'min_samples': [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+#            'cluster_selection_method': ['eom', 'leaf']
+#         }
 #         DBSCAN: {
 #            'min_samples': [5, 7, 10, 12, 15, 17]
 #         },
@@ -86,13 +96,14 @@ if __name__ == '__main__':
     
     print(result_path)
 
-    for fullpath in dataset_folder.iterdir():
+    for fullpath in data_list:
         dt = fullpath.stem + fullpath.suffix
         dt_no_ext = fullpath.stem
         print('###################################')
         print('Analysing dataset %s' % dt)
 
-        X, cluster_labels = dataset_cache.get_data(dt_no_ext)
+        cache = rw_cache if dt_no_ext in rw_datasets else syn_cache
+        X, cluster_labels = cache.get_data(dt_no_ext)
 
         for model in parameter_dict:
             args = parameter_dict[model]

@@ -44,15 +44,25 @@ def clusterize(local_distances: np.ndarray, local_indices: np.ndarray, is_bridge
     return pred_cluster_labels
 
 if __name__ == '__main__':
-    dataset_folder = Path('datasets2')
-    result_path = Path('grid_search_results2')
-    savepath = result_path / f'lof2.pkl'
+    syn_folder = Path('datasets', 'synthetic')
+    rw_folder = Path('datasets', 'real-world')
+    rw_datasets = {x.stem for x in rw_folder.iterdir() if x.is_file()}
+    
+    result_path = Path('grid_search')
+    savepath = result_path / f'lof.pkl'
     k = [3, 4, 5, 7, 10, 12, 15]
+    
+    data_list = []
+    for fullpath in syn_folder.iterdir():
+        data_list.append(fullpath)
+    for fullpath in rw_folder.iterdir():
+        data_list.append(fullpath)
 
     if not result_path.is_dir():
         result_path.mkdir()
 
-    dataset_cache = DatasetBridgeCache(dataset_folder)
+    syn_cache = DatasetBridgeCache(syn_folder)
+    rw_cache = DatasetBridgeCache(rw_folder)
 
     contamination_range = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, .1, .2, .3, .4, .5]
     n_neigh_range = [3, 5, 7, 10, 12, 15, 20]
@@ -83,15 +93,16 @@ if __name__ == '__main__':
 
     for k_val in k:
         print(f'Analysing k value: {k_val}')
-        for fullpath in dataset_folder.iterdir():
+        for fullpath in data_list:
             dt = fullpath.stem + fullpath.suffix
             dt_no_ext = fullpath.stem
             print('###################################')
             print('Analysing dataset %s' % dt)
 
-            X, cluster_labels = dataset_cache.get_data(dt_no_ext)
-            local_distances, local_indices = dataset_cache.get_neighbor(dt, k_val)
-            gt_is_bridge = dataset_cache.get_bridge(dt, k_val)
+            cache = rw_cache if dt_no_ext in rw_datasets else syn_cache
+            X, cluster_labels = cache.get_data(dt_no_ext)
+            local_distances, local_indices = cache.get_neighbor(dt, k_val)
+            gt_is_bridge = cache.get_bridge(dt, k_val)
 
             for model in parameter_dict:
                 args = parameter_dict[model]
