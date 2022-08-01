@@ -6,4 +6,4 @@ pyod==1.0.0
 hdbscan==0.8.28
 python_algorithms==0.2.2
 networkx==2.6.3
-denmune==0.0.99
+denmune==0.1.0

@@ -13,4 +13,4 @@ dependencies:
   - networkx=2.6.3
   - pip:
     - python_algorithms=0.2.2
-    - denmune=0.0.99
+    - denmune=0.1.0
