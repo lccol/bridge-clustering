@@ -40,8 +40,18 @@ def compute_unique_values(reader: Reader, ignore_fields: Union[List, Set, None]=
             else:
                 unique_values['k'].add(best_k)
             
+    non_numeric_dict = {}
     for k in unique_values:
-        unique_values[k] = list(sorted(unique_values[k]))
+        bak = unique_values[k]
+        unique_values[k] = list(
+            sorted(
+                filter(lambda x: isinstance(x, (int, float)), unique_values[k])
+            )
+        )
+        non_numeric_dict[k] = list(
+               filter(lambda x: not isinstance(x, (int, float)), bak)
+        )
+        unique_values[k][:0] = non_numeric_dict[k]
     
     unique_values = dict(unique_values)
     return unique_values
@@ -123,7 +133,8 @@ def plot_statistics(dimension_dict: dict,
                     figsize=(11, 9),
                     column_mapper: Union[Dict, None]=None,
                     fontsize: int=8,
-                    label_fontsize: int=14):
+                    label_fontsize: int=14,
+                    fmt: str='.3g'):
     fixed_params_keys = set(fixed_params.keys()) if not fixed_params is None else set()
     reduction = tuple(idx for idx in dimension_dict if not dimension_dict[idx]['field'] in selected_features and not dimension_dict[idx]['field'] in fixed_params_keys)
     reduction_func = np.sum
@@ -177,7 +188,7 @@ def plot_statistics(dimension_dict: dict,
         assert len(indexes) == 2
         df = pd.DataFrame(reduced_matrix, columns=indexes[1], index=indexes[0])
         fig, ax = plt.subplots(figsize=(figsize))
-        sns.heatmap(df, annot=True, annot_kws={'fontsize': fontsize})
+        sns.heatmap(df, annot=True, annot_kws={'fontsize': fontsize}, fmt=fmt)
         plt.xlabel(axis_labels[1], fontsize=label_fontsize)
         plt.ylabel(axis_labels[0], fontsize=label_fontsize)
         plt.yticks(rotation=0)
@@ -205,16 +216,16 @@ def find_best_configs(matrix: np.ndarray, reduction_func, threshold: float, dime
     return list(zip(configs, selected_values))
 
 if __name__ == '__main__':
-    readpath = Path('grid_search')
-    pkl_path = readpath / 'lof.pkl'
-    ignore_fields = {'n_jobs'}
-    klass = 'LOF'
-    savepath = Path('figures', f'{klass}_stats')
+    readpath = Path('other_outlier_det')
+    pkl_path = readpath / 'iforest_simpler3.pkl'
+    ignore_fields = {'n_jobs', 'random_state'}
+    klass = 'IForest'
+    savepath = Path('figures_35syn_10rw_DEF', f'{klass}_stats')
     fontsize = 22
     ticks_size = 18
     fontsize_heatmap = 17
     figsize = (8.5, 6.5)
-    export_images = True
+    export_images = False
     
     plt.rcParams.update({'axes.labelsize': fontsize, 'xtick.labelsize': ticks_size, 'ytick.labelsize': ticks_size})
 
@@ -226,7 +237,7 @@ if __name__ == '__main__':
         'pad_inches': 0
     }
 
-    if klass in {'KNN', 'LOF'}:
+    if klass in {'KNN', 'LOF', 'COPOD', 'ECOD', 'COF', 'ABOD'}:
         columns_mapper = {
             'n_neighbors': 'N. of Neighbours',
             'k': 'K',
@@ -238,12 +249,30 @@ if __name__ == '__main__':
             'k': 'K',
             'contamination': 'Contamination',
         }
+    elif klass in {'IForest', 'INNE'}:
+        columns_mapper = {
+            'contamination': 'Contamination',
+            'n_estimators': 'N. of Estimators',
+            'max_samples': 'Max Samples',
+            'bootstrap': 'Bootstrap',
+            'behaviour': 'Behavior',
+            'k': 'K'
+        }
+        
+    to_keep = set()
+    for fullpath in Path('datasets').iterdir():
+        if fullpath.is_dir():
+            for f in fullpath.iterdir():
+                if f.is_file():
+                    to_keep.add(f.stem)
+    
+    assert len(to_keep) == 45
 
 
-    if klass in {'LOF', 'KNN', 'HBOS'}:
-        reader = ODGridAllReader(pkl_path, klass)
+    if klass in {'LOF', 'KNN', 'HBOS', 'COPOD', 'ECOD', 'IForest', 'COF', 'INNE', 'ABOD'}:
+        reader = ODGridAllReader(pkl_path, klass, dataset_list=to_keep)
     else:
-        reader = ClusteringGridAllReader(pkl_path, klass)
+        reader = ClusteringGridAllReader(pkl_path, klass, dataset_list=to_keep)
     reader.analyze()
     print(f'number of datasets: {len(reader.test_datasets)}')
     
@@ -272,7 +301,8 @@ if __name__ == '__main__':
                                  fixed_params={'k': best_config['k']}, 
                                  column_mapper=columns_mapper, 
                                  fontsize=fontsize_heatmap,
-                                 label_fontsize=fontsize)
+                                 label_fontsize=fontsize,
+                                 fmt='.2g')
         # plt.title('Mean Adjusted Rand Score')
         plt.title('')
         if export_images:
@@ -287,12 +317,12 @@ if __name__ == '__main__':
                                  fontsize=fontsize_heatmap, 
                                  label_fontsize=fontsize)
         # plt.title(klass)
-        plt.ylabel('Mean Adjusted Rand Score')
+        plt.ylabel('value')
         plt.gca().legend().remove()
         plt.ylim([.2, 1.])
         if export_images:
             fig.savefig(savepath / f'{klass}_k.png', **plot_configuration)
-    elif klass in {'LOF', 'KNN'}:
+    elif klass in {'LOF', 'KNN', 'ABOD', 'COF'}:
         # LOF
         selected_features = ['n_neighbors', 'contamination']
         fig, m = plot_statistics(dimension_dict,
@@ -306,9 +336,68 @@ if __name__ == '__main__':
         plt.title('')
         if export_images:
             fig.savefig(savepath / f'{klass}_neighbors_contamination.png', **plot_configuration)
+    elif klass in {'COPOD', 'ECOD'}:
+        selected_features = ['contamination', 'k']
+        fig, m = plot_statistics(dimension_dict,
+                                 data_matrix,
+                                 selected_features,
+                                 fixed_params={},
+                                 column_mapper=columns_mapper,
+                                 fontsize=fontsize_heatmap,
+                                 label_fontsize=fontsize,
+                                 fmt='.2g')
+        plt.title('')
+        if export_images:
+            fig.savefig(savepath / f'{klass}_k_contamination.png', **plot_configuration)
+    elif klass in {'ABOD', 'COF'}:
+        selected_features = ['contamination', 'n_neighbors']
+        fixed_params = {} if klass == 'COF' else {'method': 'fast'}
+        fig, m = plot_statistics(dimension_dict,
+                                 data_matrix,
+                                 selected_features,
+                                 fixed_params=fixed_params,
+                                 column_mapper=columns_mapper,
+                                 fontsize=fontsize_heatmap,
+                                 label_fontsize=fontsize)
+        plt.title('')
+        if export_images:
+            fig.savefig(savepath / f'{klass}_neighbors_contamination.png', **plot_configuration)
+            
+    elif klass == 'INNE':
+        selected_features = ['contamination', 'k']
+        fixed_params = {
+            'n_estimators': best_config['n_estimators'],
+            'max_samples': best_config['max_samples']
+        }
+        fig, m = plot_statistics(dimension_dict,
+                                 data_matrix,
+                                 selected_features,
+                                 fixed_params=fixed_params,
+                                 column_mapper=columns_mapper,
+                                 fontsize=fontsize_heatmap,
+                                 label_fontsize=fontsize)
+        plt.title('')
+        if export_images:
+            fig.savefig(savepath / f'{klass}_contamination_k.png', **plot_configuration)
+            
+        selected_features = ['n_estimators', 'max_samples']
+        fixed_params = {
+            'contamination': best_config['contamination'],
+            'k': best_config['k']
+        }
+        fig, m = plot_statistics(dimension_dict,
+                                 data_matrix,
+                                 selected_features,
+                                 fixed_params=fixed_params,
+                                 column_mapper=columns_mapper,
+                                 fontsize=fontsize_heatmap,
+                                 label_fontsize=fontsize)
+        plt.title('')
+        if export_images:
+            fig.savefig(savepath / f'{klass}_estimators_maxsamples.png', **plot_configuration)
 
-    if klass in {'KNN', 'LOF'}:
-    # LOF, KNN
+    if klass in {'KNN', 'LOF', 'ABOD', 'COF'}:
+    # LOF, KNN, ABOD, COF
         selected_features = ['k']
         fig, m = plot_statistics(dimension_dict,
                                  data_matrix,
