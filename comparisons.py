@@ -44,7 +44,7 @@ def clusterize(kls, args, X, y, dbscan_config: Dict, dataset: str) -> np.ndarray
         if kls != DenMuneWrapper:
             clf.fit(X)
         else:
-            clf.fit(X, y) # for some reason, the visualization/clustering is different if y is not passed
+            clf.fit(pd.DataFrame(X), y) # for some reason, the visualization/clustering is different if y is not passed
         return clf
     else:
         pred_labels = clf.runAlgorithm(X)
@@ -126,8 +126,8 @@ if __name__ == '__main__':
     for fullpath in datasets:
         dataset_filename_no_ext = fullpath.stem
         
-        if not dataset_filename_no_ext in to_keep:
-            continue
+        # if not dataset_filename_no_ext in to_keep:
+        #     continue
         
         dataset = f'{dataset_filename_no_ext}.arff'
         print('@' * 30)
