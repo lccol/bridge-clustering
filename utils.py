@@ -28,6 +28,21 @@ def read_arff(fullpath: Union[str, Path]) -> Tuple[np.ndarray, np.ndarray]:
     y = df[klass].values
     return X, y
 
+def read_dataset(fullpath: Path) -> Tuple[pd.DataFrame, np.ndarray]:
+    if isinstance(fullpath, str):
+        fullpath = Path(fullpath)
+    if fullpath.suffix == '.csv':
+        df = pd.read_csv(fullpath, sep=',')
+        X, y = df[['0', '1']], df['label'].to_numpy()
+    elif fullpath.suffix == '.arff':
+        X, y = read_arff(fullpath)
+    elif fullpath.suffix == '.txt':
+        df = pd.read_csv(fullpath, delim_whitespace=True, header=None)
+        X, y = df[[0, 1]], df[2].to_numpy()
+    else:
+        raise ValueError(f'invalid path {fullpath}')
+    return X, y
+
 def generate_dbscan_config_tree(filepath: Union[str, Path]) -> Dict:
     with open(filepath, 'r') as fp:
         data = json.load(fp)
