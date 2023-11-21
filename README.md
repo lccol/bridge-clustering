@@ -46,3 +46,17 @@ The datasets are stored in `datasets` folder in `.arff` format.
 * `plot_bridges_figures.py`: generates plots containing datasets, clusters, bridges and outliers;
 * `grid_search.py`: performs the grid search and save results using pickle;
 * `run_dadc.py`: run the DADC algorithm only;
+
+### Citation
+```
+@ARTICLE{bridge_clustering,
+  author={Colomba, Luca and Cagliero, Luca and Garza, Paolo},
+  journal={IEEE Transactions on Knowledge and Data Engineering}, 
+  title={Density-Based Clustering by Means of Bridge Point Identification}, 
+  year={2023},
+  volume={35},
+  number={11},
+  pages={11274-11287},
+  doi={10.1109/TKDE.2022.3232315}
+}
+```
